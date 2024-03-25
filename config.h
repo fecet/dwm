@@ -7,7 +7,7 @@ static int const taskbar_icon = 1;  /* 任务栏使用的是icon而不是title*/
 static int const taskbar_icon_exclude_active = 1;  /* 任务栏活动窗口强制使用title*/
 static int const taskbar_movemouse_focus = 0;           /* 是否启用鼠标在taskbar移动的时候自动切换焦点 */
 static int const tag_circle = 0;           /* 是否启用工作区循环 */
-static int const enable_hotarea = 1;           /* 是否启用热区 */
+static int const enable_hotarea = 0;           /* 是否启用热区 */
 static int const hotarea_size = 10;           /* 热区大小10x10 */
 
 static int const no_stack_show_border = 1;           /* 一个窗口也显示border */
@@ -30,13 +30,16 @@ static const int overviewgappi = 24; /* overview时 窗口与边缘 缝隙大小
 static const int overviewgappo = 60; /* overview时 窗口与窗口 缝隙大小 */
 static const int showbar = 1;        /* 是否显示状态栏 */
 static const int topbar = 1;         /* 指定状态栏位置 0底部 1顶部 */
-static const float mfact = 0.6;      /* 主工作区 大小比例 */
+static const float mfact = 0.5;      /* 主工作区 大小比例 */
 static const int nmaster = 1;        /* 主工作区 窗口数量 */
 static const unsigned int snap = 10;          /* 边缘依附宽度 */
 static const unsigned int baralpha = 0xc0;    /* 状态栏透明度 */
 static const unsigned int borderalpha = 0xdd; /* 边框透明度 */
-static const char *fonts[] = {"JetBrainsMono Nerd Font:style=Bold:size=15",
-                                };
+static const char *fonts[]               = {
+    "VictorMono Nerd Font:style=Regular:size=16",
+    "Symbols Nerd Font:style=2048-em:size=16",
+    "Sarasa Mono SC Nerd:stype=Regular:size=16",
+};
 static const char *colors[][3] = {
     /* 颜色设置 ColFg, ColBg, ColBorder */
     [SchemeNorm] = {"#ffb871", "#3c2003", "#444444"},
@@ -68,8 +71,8 @@ static const unsigned int alphas[][3] = {
 
 
 /* 自定义脚本位置 */
-static const char *autostartscript = "$DWM/autostart.sh";
-static const char *statusbarscript = "$DWM/statusbar/statusbar.sh";
+static const char *autostartscript = "$HOME/scripts/autostart.sh";
+static const char *statusbarscript = "$HOME/suck/dwm/statusbar/statusbar.sh";
 
 /* 自定义tag名称 */
 /* 自定义特定实例的显示状态 */
@@ -108,7 +111,7 @@ static const Rule rules[] = {
 
     /** 普通优先度 */
     {"obs",                  NULL,                 NULL,             1 << 5,       0,          0,          0,        -1,      0,            0,       0},       // obs        tag6 
-    {"Google-chrome",               NULL,                 NULL,             1 << 3,       0,          0,          0,        -1,      0,            0,       0},       // chrome     tag4 
+    // {"Google-chrome",               NULL,                 NULL,             1 << 3,       0,          0,          0,        -1,      0,            0,       0},       // chrome     tag4 
     {"Microsoft-edge",               NULL,                 NULL,             1 << 4,       0,          0,          0,        -1,      0,            0,       0},       // chrome     tag4 
     {"qtmv",                NULL,                 NULL,             0,            1,          0,          0,        -1,      5,            1200,       800},  // music      浮动
     {"yesplaymusic",                NULL,                 NULL,             0,            1,          0,          0,        -1,      5,            1570,       1010},  // music      浮动
@@ -117,6 +120,7 @@ static const Rule rules[] = {
     {"alixby3",                NULL,                 NULL,             0,            1,          0,          0,        -1,      5,            1200,       800},  // 阿里云网盘      浮动
     {"QQ",                  NULL,                  NULL,             1 << 2,       0,          0,          0,        -1,      0,            0,       0},       // qq         tag3 
     {"flameshot",            NULL,                 NULL,             0,            1,          0,          0,        -1,      0,            0,       0},       // 火焰截图            浮动
+    {"copyq",            NULL,                 NULL,             0,            1,          0,          0,        -1,      5,            0,       0},       // copyq            浮动
     {"Blueman-manager",      NULL,                 NULL,             0,            1,          0,          0,        -1,      5,            0,       0},       // blueman            浮动
     {"com.xunlei.download",              NULL,                 NULL,             0,            1,          0,          0,        -1,      5,            600,       900},       // 迅雷            浮动
     {"Clash-verge",    NULL,                 NULL,             0,            1,          0,          0,        -1,      5,            1590,       892},       // clash            浮动
@@ -142,62 +146,68 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 #define AltMask Mod1Mask
 #define SuperMask Mod4Mask
+#define MODKEY Mod4Mask  // Super
 #define TAGKEYS(KEY, TAG, cmd) \
-    { ControlMask,              KEY, view,       {.ui = 1 << TAG, .v = cmd} }, \
-    { AltMask,    KEY, tag,        {.ui = 1 << TAG} }, \
-    { SuperMask|ControlMask,  KEY, toggleview, {.ui = 1 << TAG} }, \
+    { MODKEY,              KEY, view,       {.ui = 1 << TAG, .v = cmd} }, \
+    { MODKEY|ShiftMask,    KEY, tag,        {.ui = 1 << TAG} }, \
+    { MODKEY|ControlMask,  KEY, toggleview, {.ui = 1 << TAG} }, \
 
 static Key keys[] = {
     /* modifier                 key              function          argument */
     { SuperMask,                XK_equal,        togglesystray,    {0} },                     /* super +            |  切换 托盘栏显示状态 */
 
     { SuperMask,                XK_Tab,          focusstack,       {.i = +1} },               /* super tab          |  本tag内切换聚焦窗口 */
-    { SuperMask|ShiftMask,      XK_Tab,          focusstack,       {.i = -1} },               /* super shift tab    |  本tag内切换聚焦窗口 */
-    { ControlMask,              XK_Left,         viewtoleft,       {0} },                     /* ctrl left          |  聚焦到左边有窗口的tag */
-    { ControlMask,              XK_Right,        viewtoright,      {0} },                     /* ctrl right         |  聚焦到右边有窗口的tag */
-    { ControlMask,              XK_Up,           viewtoleft,       {0} },                     /* ctrl up            |  聚焦到左边有窗口的tag */
-    { ControlMask,              XK_Down,         viewtoright,      {0} },                     /* ctrl down          |  聚焦到右边有窗口的tag */
-    { SuperMask,                XK_Left,         addtoleft,        {0} },                     /* super left         |  聚焦到左边的tag */
-    { SuperMask,                XK_Right,        addtoright,       {0} },                     /* super right        |  聚焦到右边的tag */
-    { SuperMask,                XK_Up,           addtoleft,        {0} },                     /* super up           |  聚焦到左边的tag */
-    { SuperMask,                XK_Down,         addtoright,       {0} },                     /* super down         |  聚焦到右边的tag */
-    { ControlMask|SuperMask,    XK_Left,         tagtoleft,        {0} },                     /* ctrl alt left      |  将本窗口移动到左边tag */
-    { ControlMask|SuperMask,    XK_Right,        tagtoright,       {0} },                     /* ctrl alt right     |  将本窗口移动到右边tag */
+    // { SuperMask,                XK_k,          focusstack,       {.i = -1} },               /* super shift tab    |  本tag内切换聚焦窗口 */
+    // { ControlMask,              XK_Left,         viewtoleft,       {0} },                     /* ctrl left          |  聚焦到左边有窗口的tag */
+    // { ControlMask,              XK_Right,        viewtoright,      {0} },                     /* ctrl right         |  聚焦到右边有窗口的tag */
+    // { ControlMask,              XK_Up,           viewtoleft,       {0} },                     /* ctrl up            |  聚焦到左边有窗口的tag */
+    // { ControlMask,              XK_Down,         viewtoright,      {0} },                     /* ctrl down          |  聚焦到右边有窗口的tag */
+    // { SuperMask,                XK_Left,         addtoleft,        {0} },                     /* super left         |  聚焦到左边的tag */
+    // { SuperMask,                XK_Right,        addtoright,       {0} },                     /* super right        |  聚焦到右边的tag */
+    // { SuperMask,                XK_Up,           addtoleft,        {0} },                     /* super up           |  聚焦到左边的tag */
+    // { SuperMask,                XK_Down,         addtoright,       {0} },                     /* super down         |  聚焦到右边的tag */
+    // { ControlMask|SuperMask,    XK_Left,         tagtoleft,        {0} },                     /* ctrl alt left      |  将本窗口移动到左边tag */
+    // { ControlMask|SuperMask,    XK_Right,        tagtoright,       {0} },                     /* ctrl alt right     |  将本窗口移动到右边tag */
 
-    { AltMask,                  XK_Tab,            toggleoverview,   {0} },                     /* alt tab           |  显示所有tag 或 跳转到聚焦窗口的tag */
-    { SuperMask,                XK_comma,        setmfact,         {.f = -0.05} },            /* super ,            |  缩小主工作区 */
-    { SuperMask,                XK_period,       setmfact,         {.f = +0.05} },            /* super .            |  放大主工作区 */
+    { SuperMask,                XK_a,            toggleoverview,   {0} },                     /* alt tab           |  显示所有tag 或 跳转到聚焦窗口的tag */
+    { AltMask,                XK_Tab,            toggleoverview,   {0} },                     /* alt tab           |  显示所有tag 或 跳转到聚焦窗口的tag */
+    { SuperMask,      XK_Left,        setmfact,         {.f = -0.05} },            /* super ,            |  缩小主工作区 */
+    { SuperMask,      XK_Right,        setmfact,         {.f = +0.05} },            /* super .            |  放大主工作区 */
 
     { SuperMask,                  XK_i,            hidewin,                 {0} },                     /* super i            |  隐藏窗口,放入便签 */
     { SuperMask|ShiftMask,        XK_i,            restorewin,              {0} },                     /* super shift i      |  取消隐藏 窗口 */
-    { AltMask,                    XK_z,            toggle_scratchpad,       {0} },                     /* alt z             |  标签的循环切换 */
+    { SuperMask,                    XK_apostrophe,            toggle_scratchpad,       {0} },                     /* alt z             |  标签的循环切换 */
 
     { AltMask,    XK_s,         zoom,             {0} },                                      /* alt s              |  将当前聚焦窗口置为主窗口 */
 
-    { AltMask,                  XK_backslash,    togglefloating,   {0} },                     /* alt \            |  开启/关闭 聚焦目标的float模式 */
-    { AltMask|ShiftMask,        XK_backslash,    toggleallfloating,{0} },                     /* alt shift \      |  开启/关闭 全部目标的float模式 */
-    { AltMask,                  XK_a,            fake_fullscreen,       {0} },                /* alt a              |  开启/关闭 假全屏      */
-    { AltMask,                  XK_f,            fullscreen,       {0} },                     /* alt f              |  开启/关闭 真全屏   */
-    { SuperMask,                XK_h,            togglebar,        {0} },                     /* super h            |  开启/关闭 状态栏 */
+    { SuperMask,                  XK_f,    togglefloating,   {0} },                     /* alt \            |  开启/关闭 聚焦目标的float模式 */
+    // { AltMask|ShiftMask,        XK_backslash,    toggleallfloating,{0} },                     /* alt shift \      |  开启/关闭 全部目标的float模式 */
+    { SuperMask,                  XK_o,            fake_fullscreen,       {0} },                /* alt a              |  开启/关闭 假全屏      */
+    { SuperMask|ShiftMask,                  XK_f,            fullscreen,       {0} },                     /* alt f              |  开启/关闭 真全屏   */
+    { SuperMask,                XK_b,            togglebar,        {0} },                     /* super h            |  开启/关闭 状态栏 */
     { SuperMask,                XK_g,            toggleglobal,     {0} },                     /* super g            |  开启/关闭 全局 */
     { SuperMask,                XK_u,            toggleborder,     {0} },                     /* super u            |  开启/关闭 边框 */
-    { SuperMask,                XK_e,            incnmaster,       {.i = +1} },               /* super e            |  改变主工作区窗口数量 (1 2中切换) */
+    // { SuperMask,                XK_e,            incnmaster,       {.i = +1} },               /* super e            |  改变主工作区窗口数量 (1 2中切换) */
 
-    { SuperMask,                XK_j,            focusmon,         {.i = +1} },               /* super j            |  光标移动到另一个显示器 */
-    { SuperMask|ShiftMask,      XK_j,            tagmon,           {.i = +1} },               /* super shift j      |  将聚焦窗口移动到另一个显示器 */
+    {SuperMask, XK_bracketleft, focusmon, {.i = -1}},
+    {SuperMask, XK_bracketright, focusmon, {.i = +1}},
+    {SuperMask | ShiftMask, XK_bracketleft, tagmon, {.i = -1}},
+    {SuperMask | ShiftMask, XK_bracketright, tagmon, {.i = +1}},
 
     { ControlMask,              XK_0,            view,             {.ui= ~0} },               /* ctrl 0             |  显示所有workspace */
     { ControlMask,              XK_KP_0,         view,             {.ui= ~0} },               /* ctrl 0(右边数字键)   |  显示所有workspace */
     { AltMask,                  XK_0,            tag,              {.ui= ~0} },               /* alt 0              |  窗口在所有workspace都显示 */
     { AltMask,                  XK_KP_0,         tag,              {.ui= ~0} },               /* alt 0(右边数字键)    |  窗口在所有workspace都显示 */
 
-    { AltMask,                  XK_q,            killclient,       {0} },                     /* alt q              |  关闭窗口 */
-    { AltMask|ControlMask,      XK_q,            forcekillclient,  {0} },                     /* alt ctrl q         |  强制关闭窗口(处理某些情况下无法销毁的窗口) */
-    { SuperMask,                XK_m,            quit,             {0} },                     /* super m            |  退出dwm */
+    { SuperMask|ShiftMask,                  XK_q,            killclient,       {0} },                     /* alt q              |  关闭窗口 */
+    { SuperMask|ShiftMask|ControlMask,      XK_q,            forcekillclient,  {0} },                     /* alt ctrl q         |  强制关闭窗口(处理某些情况下无法销毁的窗口) */
+    // { SuperMask,                XK_m,            quit,             {0} },                     /* super m            |  退出dwm */
 
-	{ SuperMask,                XK_n,            selectlayout,     {.v = &layouts[1]} },      /* super n            |  切换到网格布局 */
-	{ SuperMask|ShiftMask,      XK_n,            selectlayout,     {.v = &layouts[2]} },      /* shift super n      |  切换到栈布局入栈方式 */
-	{ SuperMask,                XK_o,            showonlyorall,    {0} },                     /* super o            |  切换 只显示一个窗口 / 全部显示 */
+	// { SuperMask,                XK_n,            selectlayout,     {.v = &layouts[1]} },      /* super n            |  切换到网格布局 */
+	// { SuperMask|ShiftMask,      XK_n,            selectlayout,     {.v = &layouts[2]} },      /* shift super n      |  切换到栈布局入栈方式 */
+  // { MODKEY|ShiftMask,    XK_space,  cyclelayout,       {.i = +1 } },   // 循环布局 都有效
+
+	// { SuperMask,                XK_o,            showonlyorall,    {0} },                     /* super o            |  切换 只显示一个窗口 / 全部显示 */
 
     { SuperMask|ControlMask,    XK_equal,        setgap,           {.i = -6} },               /* super ctrl +       |  窗口增大 */
     { SuperMask|ControlMask,    XK_minus,        setgap,           {.i = +6} },               /* super ctrl -       |  窗口减小 */
@@ -214,40 +224,46 @@ static Key keys[] = {
     { SuperMask|AltMask,        XK_Right,        resizewin,        {.ui = H_EXPAND} },        /* super alt right    |  调整窗口大小 */
 
          /* alt l              | 二维聚焦窗口 */
-    { AltMask,                  XK_Left,         focusdir,         {.i = LEFT } },            /* alt left           |  本tag内切换聚焦窗口 */
-    { AltMask,                  XK_Right,        focusdir,         {.i = RIGHT } },           /* alt right          |  本tag内切换聚焦窗口 */
-    { AltMask,                  XK_Up,           focusdir,         {.i = UP } },              /* alt up             |  本tag内切换聚焦窗口 */
-    { AltMask,                  XK_Down,         focusdir,         {.i = DOWN } },            /* alt down           |  本tag内切换聚焦窗口 */
+    { SuperMask,                  XK_h,         focusdir,         {.i = LEFT } },            /* alt left           |  本tag内切换聚焦窗口 */
+    { SuperMask,                  XK_l,        focusdir,         {.i = RIGHT } },           /* alt right          |  本tag内切换聚焦窗口 */
+    { SuperMask,                  XK_k,           focusdir,         {.i = UP } },              /* alt up             |  本tag内切换聚焦窗口 */
+    { SuperMask,                  XK_j,         focusdir,         {.i = DOWN } },            /* alt down           |  本tag内切换聚焦窗口 */
 
-    { SuperMask|ShiftMask,        XK_Up,           exchange_client,  {.i = UP } },              /* super shift up       | 二维交换窗口 (仅平铺) */
-    { SuperMask|ShiftMask,        XK_Down,         exchange_client,  {.i = DOWN } },            /* super shift down     | 二维交换窗口 (仅平铺) */
-    { SuperMask|ShiftMask,        XK_Left,         exchange_client,  {.i = LEFT} },             /* super shift left     | 二维交换窗口 (仅平铺) */
-    { SuperMask|ShiftMask,        XK_Right,        exchange_client,  {.i = RIGHT } },           /* super shift right    | 二维交换窗口 (仅平铺) */
+    { SuperMask|ShiftMask,        XK_k,           exchange_client,  {.i = UP } },              /* super shift up       | 二维交换窗口 (仅平铺) */
+    { SuperMask|ShiftMask,        XK_j,         exchange_client,  {.i = DOWN } },            /* super shift down     | 二维交换窗口 (仅平铺) */
+    { SuperMask|ShiftMask,        XK_h,         exchange_client,  {.i = LEFT} },             /* super shift left     | 二维交换窗口 (仅平铺) */
+    { SuperMask|ShiftMask,        XK_l,        exchange_client,  {.i = RIGHT } },           /* super shift right    | 二维交换窗口 (仅平铺) */
 
     /* spawn + SHCMD 执行对应命令(已下部分建议完全自己重新定义) */
-    { AltMask,                  XK_Return, spawn, SHCMD("xfce4-terminal") },  
-    { SuperMask,                XK_Return, spawn, SHCMD("google-chrome") },
-    { ControlMask,              XK_Return, spawn, SHCMD("bash ~/tool/clash.sh") },                                                                                              /* alt enter      | 打开终端             */
-    { SuperMask,                XK_d,      spawn, SHCMD("/usr/bin/rofi -config ~/.config/rofi/themes/trans.rasi -show run") },                                                       /* super d          | rofi: 执行run          */
-    { AltMask,                  XK_space,  spawn, SHCMD("/usr/bin/rofi -config ~/.config/rofi/themes/trans.rasi -show drun") },                                                      /* alt space        | rofi: 执行drun          */
-    { SuperMask|ControlMask,    XK_Return, spawn, SHCMD("konsole -e  yazi") },                                                                                                          /* ctrl win enter   | rofi: nautilus 文件浏览器          */
-    { ControlMask,              XK_space,  spawn, SHCMD("rofi -theme ~/.config/rofi/themes/fancy2.rasi -modi blocks -show blocks -blocks-wrap ~/.config/rofi/search.py") },              /* ctrl space       | rofi: 执行自定义脚本   */
-    { SuperMask,                XK_space,  spawn, SHCMD("/usr/bin/rofi -config ~/.config/rofi/themes/trans.rasi -show website") },     /* super space      | rofi: 执行自定义脚本   */
-    { SuperMask|AltMask,        XK_Return, spawn, SHCMD("rofi -theme ~/.config/rofi/themes/fancy2.rasi -modi blocks -show blocks -blocks-wrap ~/tool/movie.py") },     /* super space      | rofi: 执行自定义脚本   */
-    { SuperMask,                XK_l,      spawn, SHCMD("$DWM/scripts/blurlock.sh") },                                   /* super l     | 锁定屏幕               */
-    { AltMask,                  XK_period, spawn, SHCMD("$DWM/scripts/volume.sh up") },                                 /* alt >       | 音量加                 */
-    { AltMask,                  XK_comma,  spawn, SHCMD("$DWM/scripts/volume.sh down") },                               /* alt <       | 音量减                 */
-    { ControlMask,              XK_period, spawn, SHCMD("$DWM/scripts/brightness.sh up") },                             /* ctrl >      | 亮度加                 */
-    { ControlMask,              XK_comma,  spawn, SHCMD("$DWM/scripts/brightness.sh down") },                           /* ctrl <      | 亮度减    */
-    { AltMask|ControlMask,      XK_a,      spawn, SHCMD("flameshot gui") },             /* ctrl alt a  | 截图                   */
-    { AltMask|SuperMask,        XK_q,      spawn, SHCMD("kill -9 $(xprop | grep _NET_WM_PID | awk '{print $3}')") }, /* super alt q | 选中某个窗口并强制kill */
-    { SuperMask,                XK_p,      spawn, SHCMD("bash $DWM/scripts/monitor.sh") },                              /* super p     | 关闭内部显示器 */
-    { SuperMask|ControlMask,    XK_m,      spawn, SHCMD("$DWM/scripts/rofidwm.sh outopts") },
-    // { AltMask|ControlMask,      XK_Return, spawn, SHCMD("konsole -e \"zellij -s temp --config /home/wrq/.config/zellij/tempconfigx11.kdl\"") },  /* super alt return | zellij 临时会话 */
-    { AltMask|ControlMask,      XK_Return, spawn, SHCMD("konsole -e \"~/tool/ter-multiplexer.sh\"") },  /* super alt return | zellij 临时会话 */
-    { SuperMask,                XK_b,      spawn, SHCMD("systemctl suspend") },      /* super b     | 系统挂起 */ 
-    { AltMask|ControlMask,      XK_t,      spawn, SHCMD("bash ~/tool/shotTranslate.sh shot") },      /* ctrl alt t    | 截屏翻译 */ 
+    { SuperMask,                XK_Return, spawn, SHCMD("kitty") },  
+    { SuperMask,                XK_c, spawn, SHCMD("google-chrome-stable") },
+    { SuperMask, XK_n, spawn, SHCMD("~/scripts/notify-center.sh")},
+    { SuperMask, XK_v, spawn, SHCMD("copyq toggle")},
+    { SuperMask, XK_e, spawn, SHCMD("neovide")},
 
+    // { ControlMask,              XK_Return, spawn, SHCMD("bash ~/tool/clash.sh") },                                                                                              /* alt enter      | 打开终端             */
+    // { SuperMask,                XK_d,      spawn, SHCMD("/usr/bin/rofi -config ~/.config/rofi/themes/trans.rasi -show run") },                                                       /* super d          | rofi: 执行run          */
+    { AltMask,                  XK_space,  spawn, SHCMD("rofi -show drun -theme android_notification") },                                                      /* alt space        | rofi: 执行drun          */
+    // { SuperMask|ControlMask,    XK_Return, spawn, SHCMD("konsole -e  yazi") },                                                                                                          /* ctrl win enter   | rofi: nautilus 文件浏览器          */
+    // { ControlMask,              XK_space,  spawn, SHCMD("rofi -theme ~/.config/rofi/themes/fancy2.rasi -modi blocks -show blocks -blocks-wrap ~/.config/rofi/search.py") },              /* ctrl space       | rofi: 执行自定义脚本   */
+    // { SuperMask,                XK_space,  spawn, SHCMD("/usr/bin/rofi -config ~/.config/rofi/themes/trans.rasi -show website") },     /* super space      | rofi: 执行自定义脚本   */
+    // { SuperMask|AltMask,        XK_Return, spawn, SHCMD("rofi -theme ~/.config/rofi/themes/fancy2.rasi -modi blocks -show blocks -blocks-wrap ~/tool/movie.py") },     /* super space      | rofi: 执行自定义脚本   */
+    { SuperMask|ShiftMask,                XK_Right,      spawn, SHCMD("$DWM/scripts/blurlock.sh") },                                   /* super l     | 锁定屏幕               */
+    // { AltMask,                  XK_period, spawn, SHCMD("$DWM/scripts/volume.sh up") },                                 /* alt >       | 音量加                 */
+    // { AltMask,                  XK_comma,  spawn, SHCMD("$DWM/scripts/volume.sh down") },                               /* alt <       | 音量减                 */
+    // { ControlMask,              XK_period, spawn, SHCMD("$DWM/scripts/brightness.sh up") },                             /* ctrl >      | 亮度加                 */
+    // { ControlMask,              XK_comma,  spawn, SHCMD("$DWM/scripts/brightness.sh down") },                           /* ctrl <      | 亮度减    */
+    // { AltMask|ControlMask,      XK_a,      spawn, SHCMD("flameshot gui") },             /* ctrl alt a  | 截图                   */
+    // { AltMask|SuperMask,        XK_q,      spawn, SHCMD("kill -9 $(xprop | grep _NET_WM_PID | awk '{print $3}')") }, /* super alt q | 选中某个窗口并强制kill */
+    // { SuperMask,                XK_p,      spawn, SHCMD("bash $DWM/scripts/monitor.sh") },                              /* super p     | 关闭内部显示器 */
+    // { SuperMask|ControlMask,    XK_m,      spawn, SHCMD("$DWM/scripts/rofidwm.sh outopts") },
+    // { AltMask|ControlMask,      XK_Return, spawn, SHCMD("konsole -e \"zellij -s temp --config /home/wrq/.config/zellij/tempconfigx11.kdl\"") },  /* super alt return | zellij 临时会话 */
+    // { AltMask|ControlMask,      XK_Return, spawn, SHCMD("konsole -e \"~/tool/ter-multiplexer.sh\"") },  /* super alt return | zellij 临时会话 */
+    // { SuperMask,                XK_b,      spawn, SHCMD("systemctl suspend") },      /* super b     | 系统挂起 */ 
+    // { AltMask|ControlMask,      XK_t,      spawn, SHCMD("bash ~/tool/shotTranslate.sh shot") },      /* ctrl alt t    | 截屏翻译 */ 
+
+  {0, XK_Print, spawn, SHCMD("flameshot gui -c -p ~/Pictures")},
+  {SuperMask|ShiftMask, XK_s, spawn, SHCMD("flameshot gui -c -p ~/Pictures")},
 
     /* alt key : 跳转到对应tag (可附加一条命令 若目标目录无窗口，则执行该命令) */
     /* ctrl key : 将聚焦窗口移动到对应tag */
@@ -276,6 +292,18 @@ static Key keys[] = {
     // TAGKEYS(XK_0, 6, "linuxqq")
     // TAGKEYS(XK_w, 7, "/opt/apps/com.qq.weixin.deepin/files/run.sh")
     // TAGKEYS(XK_y, 8, "/opt/apps/com.qq.weixin.work.deepin/files/run.sh")
+
+  { 0, XF86XK_AudioMute,         spawn, SHCMD("pamixer -t;  python3 $DWM/statusbar/vol.sh notify ") },
+  { 0, XF86XK_AudioRaiseVolume,  spawn, SHCMD("pamixer -i 5;python3 $DWM/statusbar/vol.sh notify ") },
+  { 0, XF86XK_AudioLowerVolume,  spawn, SHCMD("pamixer -d 5;python3 $DWM/statusbar/vol.sh notify ") },
+  { 0, XF86XK_AudioPause,        spawn, SHCMD("playerctl stop") },
+  { 0, XF86XK_AudioPrev,         spawn, SHCMD("playerctl previous") },
+  { 0, XF86XK_AudioNext,         spawn, SHCMD("playerctl next") },
+  { 0, XF86XK_AudioPlay,         spawn, SHCMD("playerctl play") },
+  { 0, XF86XK_AudioStop,         spawn, SHCMD("playerctl stop") },
+  { 0, XF86XK_AudioStop,         spawn, SHCMD("playerctl stop") },
+  { 0, XF86XK_MonBrightnessUp,   spawn, SHCMD("light -A 5; notify-send -r 9123 -h int:value:`light` -h string:hlcolor:#dddddd 'Backlight' " ) },
+  { 0, XF86XK_MonBrightnessDown, spawn, SHCMD("light -U 5; notify-send -r 9123 -h int:value:`light` -h string:hlcolor:#dddddd 'Backlight' " ) },
 };
 
 static Button buttons[] = {
