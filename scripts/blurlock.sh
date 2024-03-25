@@ -1,8 +1,9 @@
 #! /bin/bash
 # 依赖包： i3lock-color
+set -ex
 
 i3lock \
-	--blur 10 \
+  --color 00000000 \
 	--bar-indicator \
 	--bar-pos y+h \
 	--bar-direction 1 \
